@@ -24,7 +24,7 @@ public class BattleManager : MonoBehaviour
         //}
         //else
         //{
-            manager = this;
+        manager = this;
         //    DontDestroyOnLoad(gameObject);
         //}
 
@@ -43,6 +43,8 @@ public class BattleManager : MonoBehaviour
             EnemyMove(turnOrder.Peek());
         }
     }
+
+    // Call to start Player Turn
     void PlayerMove(BattleEntity player)
     {
         Debug.Log("Player Turn.");
@@ -51,12 +53,15 @@ public class BattleManager : MonoBehaviour
         fightButton.interactable = true;
         fleeButton.interactable = true;
     }
+
+    // Called by Buttons to turn them off once turn was made
     public void DisableButtons()
     {
-
         fightButton.interactable = false;
         fleeButton.interactable = false;
     }
+
+    // Call to start Enemy Turn
     void EnemyMove(BattleEntity enemy)
     {
         Debug.Log("Enemy Turn.");
@@ -65,11 +70,13 @@ public class BattleManager : MonoBehaviour
         enemy.TakeEnemyTurn(turnOrder.Peek());
     }
 
+    // Called by entity when it dies
     public void EnemyDied(string enemyName)
     {
 
     }
 
+    // Called by entity after some delay
     public void TurnEnd()
     {
         if (turnOrder.Peek().isPlayer)

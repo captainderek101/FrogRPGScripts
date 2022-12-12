@@ -14,6 +14,7 @@ public class BattleEntity : MonoBehaviour
     private Animator animator;
     public Damage damageEvent;
 
+    // Attack function, updates battle state
     public void Attack(BattleEntity victim)
     {
         dodging = false;
@@ -31,8 +32,13 @@ public class BattleEntity : MonoBehaviour
         {
             victim.TakeDamage(attack);
         }
+        else
+        {
+            victim.DodgeAnimation();
+        }
     }
 
+    // Dodge function, updates battle state
     public void Dodge()
     {
         dodging = true;
@@ -47,6 +53,13 @@ public class BattleEntity : MonoBehaviour
         }
     }
 
+    // Dodging animation trigger, called by Attacker entity
+    public void DodgeAnimation()
+    {
+        animator.SetTrigger("Dodge");
+    }
+
+    // Taking damage, called by Attacker entity
     public void TakeDamage(float amount)
     {
         curHealth -= amount;
@@ -58,12 +71,14 @@ public class BattleEntity : MonoBehaviour
         damageEvent.Invoke(curHealth / maxHealth);
     }
 
+    // Death function
     void Die()
     {
         BattleManager.manager.EnemyDied(gameObject.name);
         Destroy(gameObject);
     }
 
+    // Enemy AI function
     public void TakeEnemyTurn(BattleEntity victim)
     {
         bool decision = GetComponent<DecisionTree>().ShouldAttack(curHealth / maxHealth, BattleManager.manager.prevEnemyAttack, BattleManager.manager.prevPlayerAttack);
@@ -79,7 +94,8 @@ public class BattleEntity : MonoBehaviour
         }
     }
 
-    IEnumerator EndTurn()
+    // Coroutine to end the current turn after some time
+    private IEnumerator EndTurn()
     {
         yield return new WaitForSeconds(1.5f);
         BattleManager.manager.TurnEnd();

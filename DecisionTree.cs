@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class DecisionTree : MonoBehaviour
 {
+    // Attribute struct for use in learning and input for the decision trees
     [System.Serializable]
     public struct Attributes
     {
@@ -26,6 +27,7 @@ public class DecisionTree : MonoBehaviour
             this.shouldAttack = shouldAttack;
         }
     }
+    // Rule Struct for use setting expressions by reference
     [System.Serializable]
     public struct Rule
     {
@@ -37,6 +39,7 @@ public class DecisionTree : MonoBehaviour
             used = false;
         }
     }
+    // Node class for the binary decision tree
     private class Node
     {
         public Node left, right;
@@ -67,6 +70,7 @@ public class DecisionTree : MonoBehaviour
     private Queue<Rule> ruleQueue = new Queue<Rule>();
     private Node startingNode = new Node(new Stack<Attributes>(), 0);
     [SerializeField] int levelCutoff = 4;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -103,6 +107,7 @@ public class DecisionTree : MonoBehaviour
         BuildTree(startingNode);
     }
 
+    // recursive function that builds the decision tree with a pre-order traversal
     void BuildTree(Node parent)
     {
         if(CalculateEntropy(parent.attributes) == 0)
@@ -156,6 +161,7 @@ public class DecisionTree : MonoBehaviour
             float infoGain = CalculateInfoGain(CalculateEntropy(parent.attributes), curAttributes.Length, CalculateEntropy(toLeft), toLeft.Count, CalculateEntropy(toRight), toRight.Count);
             if(infoGain > maxInfoGain)
             {
+                Debug.Log(infoGain);
                 maxInfoGain = infoGain;
                 bestRule = curRule;
             }
@@ -175,6 +181,7 @@ public class DecisionTree : MonoBehaviour
         BuildTree(parent.right);
     }
 
+    // returns entropy / Gini Impurity
     float CalculateEntropy(Stack<Attributes> values)
     {
         Attributes[] list = values.ToArray();
@@ -188,11 +195,13 @@ public class DecisionTree : MonoBehaviour
         return 1 - (Mathf.Pow(((float)trueCount / values.Count), 2) + Mathf.Pow(((float)falseCount / values.Count), 2));
     }
 
+    // Returns info gain for a rule
     float CalculateInfoGain(float parentEntropy, int parentCount, float leftEntropy, int leftCount, float rightEntropy, int rightCount)
     {
         return parentEntropy - ((leftEntropy * (float)leftCount / parentCount) + (rightEntropy * (float)rightCount / parentCount));
     }
 
+    // Input for the decision tree. Input the current state of the enemy/battle
     public bool ShouldAttack(float percentHealth, bool prevAttack, bool prevPlayerAttack)
     {
         currentState = new Attributes(percentHealth, prevAttack, prevPlayerAttack);
@@ -207,6 +216,7 @@ public class DecisionTree : MonoBehaviour
         }
     }
 
+    // Helper/recursive function for decision tree input
     private bool ShouldAttack(Node curNode)
     {
         if(curNode.isLeaf)
