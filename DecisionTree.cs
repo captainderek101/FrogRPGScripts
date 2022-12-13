@@ -31,6 +31,7 @@ public class DecisionTree : MonoBehaviour
     [System.Serializable]
     public class Rule
     {
+        public Attributes attribute;
         public bool expression;
         public bool used;
         public Rule(ref bool expression)
@@ -38,6 +39,10 @@ public class DecisionTree : MonoBehaviour
             this.expression = expression;
             used = false;
         }
+        //public bool Evaluate(Attributes newAttribute)
+        //{
+
+        //}
     }
     // Node class for the binary decision tree
     private class Node
@@ -94,7 +99,10 @@ public class DecisionTree : MonoBehaviour
         startingNode.attributes.Push(new Attributes(0.8f, false, true, true));
         startingNode.attributes.Push(new Attributes(0.8f, true, true, true));
         startingNode.attributes.Push(new Attributes(0.8f, true, false, true));
-
+        currentState.percentHealth = 0.8f;
+        Debug.Log(ruleQueue.Peek().expression);
+        currentState.percentHealth = 0.4f;
+        Debug.Log(ruleQueue.Peek().expression);
 
 
         //startingNode.attributes.Push(new Attributes(0.8f, false, true, false));
@@ -154,7 +162,7 @@ public class DecisionTree : MonoBehaviour
                 //Debug.Log(i + ": " + curRule.expression);
                 if (curRule.expression)
                 {
-                    Debug.Log("Going right");
+                    //Debug.Log("Going right");
                     toRight.Push(attribute);
                 }
                 else
@@ -184,7 +192,7 @@ public class DecisionTree : MonoBehaviour
             }
             else
             {
-                Debug.Log("Going left");
+                //Debug.Log("Going left");
                 toLeft.Push(attribute);
             }
         }
