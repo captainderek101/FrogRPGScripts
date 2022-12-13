@@ -35,4 +35,9 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(seconds);
         SceneManager.LoadScene("Battle");
     }
+
+    public void ExitGame()
+    {
+        Application.Quit(0);
+    }
 }

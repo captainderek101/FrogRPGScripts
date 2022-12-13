@@ -31,25 +31,46 @@ public class DecisionTree : MonoBehaviour
     [System.Serializable]
     public class Rule
     {
+        public int numExpressions = 5;
         public Attributes attribute;
         public bool expression;
         public bool used;
-        public Rule(ref bool expression)
+        List<System.Action> ruleList = new List<System.Action>();
+        public Rule()
         {
-            this.expression = expression;
-            used = false;
         }
-        //public bool Evaluate(Attributes newAttribute)
-        //{
 
+        //public Rule(ref bool expression)
+        //{
+        //    this.expression = expression;
+        //    used = false;
         //}
+        public bool Evaluate(ref Attributes attribute, int expressionNum)
+        {
+            switch(expressionNum)
+            {
+                case 0:
+                    return attribute.percentHealth > 0.6f;
+                case 1:
+                    return attribute.percentHealth == 1;
+                case 2:
+                    return attribute.percentHealth < 0.5f;
+                case 3:
+                    return attribute.prevPlayerAttack;
+                case 4:
+                    return attribute.prevAttack;
+                default:
+                    return used;
+            }
+        }
     }
     // Node class for the binary decision tree
     private class Node
     {
         public Node left, right;
         public Stack<Attributes> attributes = new Stack<Attributes>();
-        public bool rule;
+        public Rule rule;
+        public int expressionNum;
         public bool shouldAttack = false;
         public bool isLeaf;
         public int level = 0;
@@ -64,25 +85,26 @@ public class DecisionTree : MonoBehaviour
             this.level = level;
             isLeaf = false;
         }
-        public void SetRule(ref bool rule)
+        public void SetRule(Rule rule)
         {
             this.rule = rule;
         }
     }
     public static Attributes currentState = new Attributes();
-    public static bool[] ruleExpressions = { currentState.percentHealth > 0.6f, currentState.percentHealth == 1, currentState.percentHealth < 0.5f, currentState.prevPlayerAttack, currentState.prevAttack };
-    [SerializeField] private Rule[] rules = { new Rule(ref ruleExpressions[0]), new Rule(ref ruleExpressions[1]), new Rule(ref ruleExpressions[2]), new Rule(ref ruleExpressions[3]), new Rule(ref ruleExpressions[4]) };
-    private Queue<Rule> ruleQueue = new Queue<Rule>();
+    //public static bool[] ruleExpressions = { currentState.percentHealth > 0.6f, currentState.percentHealth == 1, currentState.percentHealth < 0.5f, currentState.prevPlayerAttack, currentState.prevAttack };
+    //[SerializeField] private Rule[] rules = { new Rule(ref ruleExpressions[0]), new Rule(ref ruleExpressions[1]), new Rule(ref ruleExpressions[2]), new Rule(ref ruleExpressions[3]), new Rule(ref ruleExpressions[4]) };
+    public Rule rule = new Rule();
+    //private Queue<Rule> ruleQueue = new Queue<Rule>();
     private Node startingNode = new Node(new Stack<Attributes>(), 0);
     [SerializeField] int levelCutoff = 4;
 
     // Start is called before the first frame update
     void Start()
     {
-        foreach(Rule curRule in rules)
-        {
-            ruleQueue.Enqueue(curRule);
-        }
+        //foreach(Rule curRule in rules)
+        //{
+        //    ruleQueue.Enqueue(curRule);
+        //}
         //                                          HP   enemy  player  attack?
         startingNode.attributes.Push(new Attributes(0.2f, false, true, true));
         startingNode.attributes.Push(new Attributes(0.4f, true, false, false));
@@ -100,9 +122,9 @@ public class DecisionTree : MonoBehaviour
         startingNode.attributes.Push(new Attributes(0.8f, true, true, true));
         startingNode.attributes.Push(new Attributes(0.8f, true, false, true));
         currentState.percentHealth = 0.8f;
-        Debug.Log(ruleQueue.Peek().expression);
+        Debug.Log(rule.Evaluate(ref currentState, 0));
         currentState.percentHealth = 0.4f;
-        Debug.Log(ruleQueue.Peek().expression);
+        Debug.Log(rule.Evaluate(ref currentState, 0));
 
 
         //startingNode.attributes.Push(new Attributes(0.8f, false, true, false));
@@ -147,20 +169,21 @@ public class DecisionTree : MonoBehaviour
         Stack<Attributes> toRight = new Stack<Attributes>();
         Attributes[] curAttributes = parent.attributes.ToArray();
         float maxInfoGain = 0;
-        Rule bestRule = ruleQueue.Peek();
-        for (int i=0; i<ruleQueue.Count; i++)
+        //Rule bestRule = ruleQueue.Peek();
+        int bestRule = 0;
+        for (int i=0; i<rule.numExpressions; i++)
         {
-            Rule curRule = ruleQueue.Dequeue();
-            if(curRule.used)
-            {
-                continue;
-            }
-            ruleQueue.Enqueue(curRule);
+            //Rule curRule = ruleQueue.Dequeue();
+            //if(curRule.used)
+            //{
+            //    continue;
+            //}
+            //ruleQueue.Enqueue(curRule);
             foreach(Attributes attribute in curAttributes)
             {
                 currentState = attribute;
                 //Debug.Log(i + ": " + curRule.expression);
-                if (curRule.expression)
+                if (rule.Evaluate(ref currentState, i))
                 {
                     //Debug.Log("Going right");
                     toRight.Push(attribute);
@@ -177,7 +200,7 @@ public class DecisionTree : MonoBehaviour
                 if (infoGain > maxInfoGain)
                 {
                     maxInfoGain = infoGain;
-                    bestRule = curRule;
+                    bestRule = i;
                 }
             }
             toLeft.Clear();
@@ -186,7 +209,7 @@ public class DecisionTree : MonoBehaviour
         foreach (Attributes attribute in curAttributes)
         {
             currentState = attribute;
-            if (parent.rule == true)
+            if (rule.Evaluate(ref currentState, parent.expressionNum))
             {
                 toRight.Push(attribute);
             }
@@ -212,8 +235,9 @@ public class DecisionTree : MonoBehaviour
         //    Debug.Log(parent.shouldAttack);
         //    return;
         //}
-        bestRule.used = true;
-        parent.SetRule(ref bestRule.expression);
+        //bestRule.used = true;
+        parent.SetRule(rule);
+        parent.expressionNum = bestRule;
         Debug.Log("Going left");
         parent.left = new Node(toLeft, parent.level + 1);
         BuildTree(parent.left);
@@ -251,30 +275,30 @@ public class DecisionTree : MonoBehaviour
     {
         currentState = new Attributes(percentHealth, prevAttack, prevPlayerAttack);
         //Debug.Log("Enemy Health: " + percentHealth);
-        if(startingNode.rule)
+        if(startingNode.rule.Evaluate(ref currentState, startingNode.expressionNum))
         {
-            return ShouldAttack(startingNode.right);
+            return ShouldAttack(startingNode.right, currentState);
         }
         else
         {
-            return ShouldAttack(startingNode.left);
+            return ShouldAttack(startingNode.left, currentState);
         }
     }
 
     // Helper/recursive function for decision tree input
-    private bool ShouldAttack(Node curNode)
+    private bool ShouldAttack(Node curNode, Attributes curState)
     {
         if(curNode.isLeaf)
         {
             return curNode.shouldAttack;
         }
-        if (curNode.rule)
+        if (curNode.rule.Evaluate(ref curState, curNode.expressionNum))
         {
-            return ShouldAttack(curNode.right);
+            return ShouldAttack(curNode.right, curState);
         }
         else
         {
-            return ShouldAttack(curNode.left);
+            return ShouldAttack(curNode.left, curState);
         }
     }
 
@@ -287,9 +311,11 @@ public class DecisionTree : MonoBehaviour
         else
         {
             print("Node with " + curNode.rule+" goes left to ");
-            PrintTree(curNode.left);
+            if(curNode.left != null)
+                PrintTree(curNode.left);
             print(" and right to ");
-            PrintTree(curNode.right);
+            if (curNode.right != null)
+                PrintTree(curNode.right);
         }
     }
 }
