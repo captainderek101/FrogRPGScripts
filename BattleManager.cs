@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class BattleManager : MonoBehaviour
 {
@@ -12,8 +13,10 @@ public class BattleManager : MonoBehaviour
     private Button fightButton;
     [SerializeField]
     private Button fleeButton;
+    public TMP_Text battleText;
     public bool prevEnemyAttack = false;
     public bool prevPlayerAttack = false;
+    private int turnCount;
 
     // Start is called before the first frame update
     void Start()
@@ -35,6 +38,18 @@ public class BattleManager : MonoBehaviour
             turnOrder.Enqueue(entity);
         }
         if(turnOrder.Peek().isPlayer)
+        {
+            PlayerMove(turnOrder.Peek());
+        }
+        else
+        {
+            EnemyMove(turnOrder.Peek());
+        }
+    }
+
+    public void NextMove()
+    {
+        if (turnOrder.Peek().isPlayer)
         {
             PlayerMove(turnOrder.Peek());
         }
@@ -76,16 +91,41 @@ public class BattleManager : MonoBehaviour
 
     }
 
-    // Called by entity after some delay
-    public void TurnEnd()
+    //// Called by entity after some delay
+    //public void TurnEnd()
+    //{
+    //    turnCount++;
+    //    if (turnCount % 2 == 1)
+    //    {
+    //        NextMove();
+    //    }
+    //    else
+    //    {
+    //        if(prevEnemyAttack && prevPlayerAttack)
+    //        {
+
+    //            StartCoroutine(PlayMoves(2f));
+    //        }
+    //        else if(prevEnemyAttack || prevPlayerAttack)
+    //        {
+    //            StartCoroutine(PlayMoves(1f));
+    //        }
+    //        else
+    //        {
+    //            SetBattleText("Both Dodged!");
+    //            StartCoroutine(PlayMoves(0.5f));
+    //        }
+    //    }
+    //}
+
+    public void SetBattleText(string text)
     {
-        if (turnOrder.Peek().isPlayer)
-        {
-            PlayerMove(turnOrder.Peek());
-        }
-        else
-        {
-            EnemyMove(turnOrder.Peek());
-        }
+        battleText.text = text;
+    }
+
+    private IEnumerator PlayMoves(float seconds = 1.5f)
+    {
+        yield return new WaitForSeconds(seconds);
+        NextMove();
     }
 }

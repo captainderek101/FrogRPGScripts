@@ -29,7 +29,7 @@ public class DecisionTree : MonoBehaviour
     }
     // Rule Struct for use setting expressions by reference
     [System.Serializable]
-    public struct Rule
+    public class Rule
     {
         public bool expression;
         public bool used;
@@ -65,7 +65,7 @@ public class DecisionTree : MonoBehaviour
         }
     }
     public static Attributes currentState = new Attributes();
-    public static bool[] ruleExpressions = { currentState.percentHealth > 0.6f, currentState.percentHealth == 1, currentState.percentHealth < 0.5, currentState.prevPlayerAttack, currentState.prevAttack };
+    public static bool[] ruleExpressions = { currentState.percentHealth > 0.6f, currentState.percentHealth == 1, currentState.percentHealth < 0.5f, currentState.prevPlayerAttack, currentState.prevAttack };
     [SerializeField] private Rule[] rules = { new Rule(ref ruleExpressions[0]), new Rule(ref ruleExpressions[1]), new Rule(ref ruleExpressions[2]), new Rule(ref ruleExpressions[3]), new Rule(ref ruleExpressions[4]) };
     private Queue<Rule> ruleQueue = new Queue<Rule>();
     private Node startingNode = new Node(new Stack<Attributes>(), 0);
@@ -79,7 +79,7 @@ public class DecisionTree : MonoBehaviour
             ruleQueue.Enqueue(curRule);
         }
         //                                          HP   enemy  player  attack?
-        startingNode.attributes.Push(new Attributes(0.2f, false, true, false));
+        startingNode.attributes.Push(new Attributes(0.2f, false, true, true));
         startingNode.attributes.Push(new Attributes(0.4f, true, false, false));
         startingNode.attributes.Push(new Attributes(0.6f, true, true, true));
         startingNode.attributes.Push(new Attributes(0.2f, true, false, false));
@@ -97,13 +97,15 @@ public class DecisionTree : MonoBehaviour
 
 
 
-        startingNode.attributes.Push(new Attributes(0.8f, false, true, false));
-        startingNode.attributes.Push(new Attributes(0.8f, true, true, false));
-        startingNode.attributes.Push(new Attributes(0.8f, true, false, false));
-        startingNode.attributes.Push(new Attributes(1f, false, false, false));
-        startingNode.attributes.Push(new Attributes(1f, true, true, false));
-        startingNode.attributes.Push(new Attributes(0.6f, true, true, false));
-        startingNode.attributes.Push(new Attributes(0.2f, false, false, false));
+        //startingNode.attributes.Push(new Attributes(0.8f, false, true, false));
+        //startingNode.attributes.Push(new Attributes(0.8f, true, true, false));
+        //startingNode.attributes.Push(new Attributes(0.8f, true, false, false));
+        //startingNode.attributes.Push(new Attributes(1f, false, false, false));
+        //startingNode.attributes.Push(new Attributes(1f, true, true, false));
+        //startingNode.attributes.Push(new Attributes(0.6f, true, true, false));
+        //startingNode.attributes.Push(new Attributes(0.2f, false, false, false));
+
+
         BuildTree(startingNode);
     }
 
@@ -149,8 +151,10 @@ public class DecisionTree : MonoBehaviour
             foreach(Attributes attribute in curAttributes)
             {
                 currentState = attribute;
-                if(curRule.expression)
+                //Debug.Log(i + ": " + curRule.expression);
+                if (curRule.expression)
                 {
+                    Debug.Log("Going right");
                     toRight.Push(attribute);
                 }
                 else
@@ -158,20 +162,49 @@ public class DecisionTree : MonoBehaviour
                     toLeft.Push(attribute);
                 }
             }
-            float infoGain = CalculateInfoGain(CalculateEntropy(parent.attributes), curAttributes.Length, CalculateEntropy(toLeft), toLeft.Count, CalculateEntropy(toRight), toRight.Count);
-            if(infoGain > maxInfoGain)
+            if (toLeft.Count != 0 && toRight.Count != 0)
             {
+                float infoGain = CalculateInfoGain(CalculateEntropy(parent.attributes), curAttributes.Length, CalculateEntropy(toLeft), toLeft.Count, CalculateEntropy(toRight), toRight.Count);
                 Debug.Log(infoGain);
-                maxInfoGain = infoGain;
-                bestRule = curRule;
+                if (infoGain > maxInfoGain)
+                {
+                    maxInfoGain = infoGain;
+                    bestRule = curRule;
+                }
+            }
+            toLeft.Clear();
+            toRight.Clear();
+        }
+        foreach (Attributes attribute in curAttributes)
+        {
+            currentState = attribute;
+            if (parent.rule == true)
+            {
+                toRight.Push(attribute);
+            }
+            else
+            {
+                Debug.Log("Going left");
+                toLeft.Push(attribute);
             }
         }
-        if(toLeft.Count == 0 || toRight.Count == 0)
-        {
-            parent.isLeaf = true;
-            parent.shouldAttack = parent.attributes.Peek().shouldAttack;
-            return;
-        }
+        //if (toLeft.Count == 0 || toRight.Count == 0 || maxInfoGain == 0)
+        //{
+        //    parent.isLeaf = true;
+        //    int trueCount = 0;
+        //    int totalCount = parent.attributes.Count;
+        //    for (int i = 0; i < totalCount; i++)
+        //    {
+        //        if (parent.attributes.Pop().shouldAttack)
+        //        {
+        //            trueCount++;
+        //        }
+        //    }
+        //    parent.shouldAttack = (trueCount >= totalCount - trueCount);
+        //    Debug.Log(parent.shouldAttack);
+        //    return;
+        //}
+        bestRule.used = true;
         parent.SetRule(ref bestRule.expression);
         Debug.Log("Going left");
         parent.left = new Node(toLeft, parent.level + 1);
@@ -179,6 +212,8 @@ public class DecisionTree : MonoBehaviour
         Debug.Log("Going right");
         parent.right = new Node(toRight, parent.level + 1);
         BuildTree(parent.right);
+
+        PrintTree(startingNode);
     }
 
     // returns entropy / Gini Impurity
@@ -191,21 +226,23 @@ public class DecisionTree : MonoBehaviour
             if (attribute.shouldAttack)
                 trueCount++;
         }
-        int falseCount = values.Count - trueCount;
-        return 1 - (Mathf.Pow(((float)trueCount / values.Count), 2) + Mathf.Pow(((float)falseCount / values.Count), 2));
+        int falseCount = list.Length - trueCount;
+        float entropy = 1 - (Mathf.Pow(((float)trueCount / values.Count), 2) + Mathf.Pow(((float)falseCount / values.Count), 2));
+        Debug.Log("Entropy = " + entropy);
+        return entropy;
     }
 
     // Returns info gain for a rule
     float CalculateInfoGain(float parentEntropy, int parentCount, float leftEntropy, int leftCount, float rightEntropy, int rightCount)
     {
-        return parentEntropy - ((leftEntropy * (float)leftCount / parentCount) + (rightEntropy * (float)rightCount / parentCount));
+        return parentEntropy - ((leftEntropy * ((float)leftCount / parentCount)) + (rightEntropy * ((float)rightCount / parentCount)));
     }
 
     // Input for the decision tree. Input the current state of the enemy/battle
     public bool ShouldAttack(float percentHealth, bool prevAttack, bool prevPlayerAttack)
     {
         currentState = new Attributes(percentHealth, prevAttack, prevPlayerAttack);
-        Debug.Log("Enemy Health: " + percentHealth);
+        //Debug.Log("Enemy Health: " + percentHealth);
         if(startingNode.rule)
         {
             return ShouldAttack(startingNode.right);
@@ -230,6 +267,21 @@ public class DecisionTree : MonoBehaviour
         else
         {
             return ShouldAttack(curNode.left);
+        }
+    }
+
+    private void PrintTree(Node curNode)
+    {
+        if(curNode.isLeaf)
+        {
+            print("Leaf with " + curNode.rule);
+        }
+        else
+        {
+            print("Node with " + curNode.rule+" goes left to ");
+            PrintTree(curNode.left);
+            print(" and right to ");
+            PrintTree(curNode.right);
         }
     }
 }
