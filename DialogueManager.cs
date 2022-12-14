@@ -25,7 +25,8 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(Dialogue dialogue)
     {
-        if(dialogueBox.activeSelf)
+        battleBegin += FindObjectOfType<PlayerController>().SavePosition;
+        if (dialogueBox.activeSelf)
         {
             return;
         }

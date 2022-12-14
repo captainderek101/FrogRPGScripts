@@ -9,13 +9,10 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator animator;
     private Vector2 moveVelocity;
-    private DialogueManager manager;
     // Start is called before the first frame update
     void Start()
     {
         animator = gameObject.GetComponent<Animator>();
-        manager = FindObjectOfType<DialogueManager>();
-        manager.battleBegin += SavePosition;
         rb = GetComponent<Rigidbody2D>();
     }
 
@@ -32,7 +29,7 @@ public class PlayerController : MonoBehaviour
         rb.MovePosition(rb.position + moveVelocity * Time.fixedDeltaTime);
     }
 
-    private void SavePosition()
+    public void SavePosition()
     {
         PlayerPrefs.SetFloat("xPos", transform.position.x);
         PlayerPrefs.SetFloat("yPos", transform.position.y);

@@ -53,7 +53,8 @@ public class GameManager : MonoBehaviour
 
     private void OnLevelWasLoaded(int level)
     {
-        worldMusic.Play();
+        if(SceneManager.GetActiveScene().name == "Overworld")
+            worldMusic.Play();
         if (CarltonDead)
         {
             Destroy(GameObject.Find("Carlton the Snake"));

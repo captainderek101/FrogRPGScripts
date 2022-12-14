@@ -21,15 +21,7 @@ public class BattleManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //if (manager != null)
-        //{
-        //    Destroy(gameObject);
-        //}
-        //else
-        //{
         manager = this;
-        //    DontDestroyOnLoad(gameObject);
-        //}
         entities = Object.FindObjectsOfType(typeof(BattleEntity)) as BattleEntity[];
         foreach (BattleEntity entity in entities)
         {
