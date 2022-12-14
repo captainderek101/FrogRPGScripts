@@ -30,7 +30,6 @@ public class BattleManager : MonoBehaviour
         manager = this;
         //    DontDestroyOnLoad(gameObject);
         //}
-
         entities = Object.FindObjectsOfType(typeof(BattleEntity)) as BattleEntity[];
         foreach (BattleEntity entity in entities)
         {
@@ -88,7 +87,15 @@ public class BattleManager : MonoBehaviour
     // Called by entity when it dies
     public void EnemyDied(string enemyName)
     {
-
+        if(enemyName == "Leonard")
+        {
+            GameManager.manager.LeonardDead = true;
+        }
+        else if(enemyName == "Carlton")
+        {
+            GameManager.manager.CarltonDead = true;
+        }
+        GameManager.manager.GoToOverworld();
     }
 
     //// Called by entity after some delay

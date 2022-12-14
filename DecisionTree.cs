@@ -306,14 +306,14 @@ public class DecisionTree : MonoBehaviour
     {
         if(curNode.isLeaf)
         {
-            print("Leaf with " + curNode.rule);
+            //print("Leaf with " + curNode.rule);
         }
         else
         {
-            print("Node with " + curNode.rule+" goes left to ");
+            //print("Node with " + curNode.rule+" goes left to ");
             if(curNode.left != null)
                 PrintTree(curNode.left);
-            print(" and right to ");
+            //print(" and right to ");
             if (curNode.right != null)
                 PrintTree(curNode.right);
         }

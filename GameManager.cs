@@ -9,7 +9,11 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private float transitiionTime = 1.4f;
     [SerializeField]
+    private AudioSource worldMusic;
+    [SerializeField]
     private AudioSource transitionMusic;
+    public bool LeonardDead = false;
+    public bool CarltonDead = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,18 +30,37 @@ public class GameManager : MonoBehaviour
 
     public void StartBattle(int enemyType)
     {
-        StartCoroutine(LevelTransition(transitiionTime));
+        StartCoroutine(LevelTransition(transitiionTime, enemyType));
     }
 
-    IEnumerator LevelTransition(float seconds)
+    IEnumerator LevelTransition(float seconds, int enemyType)
     {
+        worldMusic.Pause();
         transitionMusic.Play();
         yield return new WaitForSeconds(seconds);
-        SceneManager.LoadScene("Battle");
+        SceneManager.LoadScene("Battle "+enemyType);
+    }
+
+    public void GoToOverworld()
+    {
+        SceneManager.LoadScene("Overworld");
     }
 
     public void ExitGame()
     {
         Application.Quit(0);
+    }
+
+    private void OnLevelWasLoaded(int level)
+    {
+        worldMusic.Play();
+        if (CarltonDead)
+        {
+            Destroy(GameObject.Find("Carlton the Snake"));
+        }
+        if(LeonardDead)
+        {
+            Destroy(GameObject.Find("Leonard the Chameleon"));
+        }
     }
 }
