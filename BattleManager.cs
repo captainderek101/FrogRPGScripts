@@ -90,6 +90,12 @@ public class BattleManager : MonoBehaviour
         GameManager.manager.GoToOverworld();
     }
 
+
+    public void ExitGame()
+    {
+        Application.Quit(0);
+    }
+
     //// Called by entity after some delay
     //public void TurnEnd()
     //{
