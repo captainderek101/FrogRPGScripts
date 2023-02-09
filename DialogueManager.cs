@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public delegate void EndDialogue();
 public class DialogueManager : MonoBehaviour
 {
     private Queue<string> sentences;
     public Text charName;
     public Text dialogue;
     public GameObject dialogueBox;
+    public EndDialogue dialogueEndEvent;
+    public EndDialogue battleBegin;
+    public int curBattle = 0;
 
     bool typing = false;
     bool buffered = false;
@@ -21,7 +25,8 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(Dialogue dialogue)
     {
-        if(dialogueBox.activeSelf)
+        battleBegin += FindObjectOfType<PlayerController>().SavePosition;
+        if (dialogueBox.activeSelf)
         {
             return;
         }
@@ -48,6 +53,8 @@ public class DialogueManager : MonoBehaviour
         {
             if (sentences.Count == 0)
             {
+                battleBegin.Invoke();
+                GameManager.manager.StartBattle(curBattle);
                 EndDialogue();
                 return;
             }
@@ -77,11 +84,11 @@ public class DialogueManager : MonoBehaviour
 
     public void EndDialogue()
     {
+        dialogueEndEvent.Invoke();
         if(dialogueBox.activeSelf)
         {
             dialogueBox.SetActive(false);
             Debug.Log("End of conversation.");
         }
-        GameManager.manager.StartBattle(0);
     }
 }

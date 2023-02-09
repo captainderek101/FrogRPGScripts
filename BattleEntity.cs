@@ -17,16 +17,20 @@ public class BattleEntity : MonoBehaviour
     // Attack function, updates battle state
     public void Attack(BattleEntity victim)
     {
+
+        BattleManager.manager.SetBattleText("");
         dodging = false;
         if(isPlayer)
         {
+            BattleManager.manager.battleText.text += "Player Attacks! ";
             BattleManager.manager.prevPlayerAttack = true;
         }
         else
         {
+            BattleManager.manager.battleText.text += "Enemy Attacks! ";
             BattleManager.manager.prevEnemyAttack = true;
         }
-        StartCoroutine(EndTurn());
+        EndTurn();
         animator.SetTrigger("Attack");
         if (!victim.dodging)
         {
@@ -34,6 +38,7 @@ public class BattleEntity : MonoBehaviour
         }
         else
         {
+            BattleManager.manager.battleText.text += "But it was dodged! ";
             victim.DodgeAnimation();
         }
     }
@@ -42,7 +47,8 @@ public class BattleEntity : MonoBehaviour
     public void Dodge()
     {
         dodging = true;
-        StartCoroutine(EndTurn());
+        EndTurn();
+        EndTurn();
         if (isPlayer)
         {
             BattleManager.manager.prevPlayerAttack = false;
@@ -50,6 +56,10 @@ public class BattleEntity : MonoBehaviour
         else
         {
             BattleManager.manager.prevEnemyAttack = false;
+        }
+        if(!(BattleManager.manager.prevEnemyAttack || BattleManager.manager.prevPlayerAttack))
+        {
+            dodging = false;
         }
     }
 
@@ -95,9 +105,14 @@ public class BattleEntity : MonoBehaviour
     }
 
     // Coroutine to end the current turn after some time
-    private IEnumerator EndTurn()
+    private void EndTurn()
     {
-        yield return new WaitForSeconds(1.5f);
-        BattleManager.manager.TurnEnd();
+        StartCoroutine(EndTurnWithDelay());
+    }
+
+    private IEnumerator EndTurnWithDelay(float seconds = 1f)
+    {
+        yield return new WaitForSeconds(seconds);
+        BattleManager.manager.NextMove();
     }
 }
